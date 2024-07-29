@@ -1,0 +1,11 @@
+.dockerignore
+.env
+.eslintcache
+.git*
+.husky
+.npmrc
+.nvmrc
+.vscode
+*.md
+Dockerfile
+node_modules

@@ -1,0 +1,53 @@
+{
+  "name": "discord-bitcoin-faucet-bot",
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": {
+    "name": "Gabriel Montes",
+    "email": "gabriel@bloq.com"
+  },
+  "scripts": {
+    "deploy-commands": "node src/deploy-commands.js",
+    "start": "node src/bot.js",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "bitcoinjs-lib": "6.1.6",
+    "date-fns": "3.6.0",
+    "discord.js": "14.15.3",
+    "ecpair": "2.1.0",
+    "tiny-secp256k1": "2.2.3"
+  },
+  "devDependencies": {
+    "@types/node": "20.14.10",
+    "eslint": "8.57.0",
+    "eslint-config-bloq": "4.1.0",
+    "husky": "9.1.4",
+    "knip": "5.27.0",
+    "lint-staged": "15.2.7",
+    "prettier": "3.3.3",
+    "typescript": "5.5.4"
+  },
+  "packageManager": "pnpm@9.5.0+sha512.140036830124618d624a2187b50d04289d5a087f326c9edfc0ccd733d76c4f52c3a313d4fc148794a2a9d81553016004e6742e8cf850670268a7387fc220c903",
+  "type": "module",
+  "eslintConfig": {
+    "extends": [
+      "bloq",
+      "bloq/node"
+    ],
+    "rules": {
+      "quotes": "off"
+    }
+  },
+  "knip": {
+    "entry": [
+      "src/bot.js",
+      "src/deploy-commands.js"
+    ]
+  },
+  "lint-staged": {
+    "*.js": "eslint --cache --fix",
+    "*.{js,json,md}": "prettier --write"
+  },
+  "prettier": {}
+}

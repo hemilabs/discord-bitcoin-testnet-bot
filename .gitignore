@@ -1,0 +1,4 @@
+.env
+.eslintcache
+.vscode
+node_modules
