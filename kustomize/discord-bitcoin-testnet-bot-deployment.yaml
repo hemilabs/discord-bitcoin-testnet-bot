@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: discord-bitcoin-testnet-bot-deployment
+  namespace: discord
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: discord
+  template:
+    metadata:
+      labels:
+        app: discord
+    spec:
+      containers:
+      - name: discord-bot
+        image: hemilabs/discord-bitcoin-testnet-bot:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        env:
+        - name: PRIVATE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: discord-bitcoin-bot-secrets
+              key: PRIVATE_KEY
+        - name: BOT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: discord-bitcoin-bot-secrets
+              key: BOT_TOKEN
+        - name: CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: discord-bitcoin-bot-secrets
+              key: CLIENT_ID
+        - name: GUILD_ID
+          valueFrom:
+            secretKeyRef:
+              name: discord-bitcoin-bot-secrets
+              key: GUILD_ID
+        - name: LOG_CHANNEL_ID
+          valueFrom:
+            secretKeyRef:
+              name: discord-bitcoin-bot-secrets
+              key: LOG_CHANNEL_ID
+      imagePullSecrets:
+      - name: dockerhub-secret
+
