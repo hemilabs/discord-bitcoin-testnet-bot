@@ -8,7 +8,8 @@ import {
   satsAmount,
 } from "./config.js";
 
-const satsToBtc = (sats) => (sats / 1e8).toFixed(8).replace(/0+$/, "");
+const satsToBtc = (sats) =>
+  (sats / 1e8).toFixed(8).replace(/0+$/, "").replace(/\.$/, "");
 
 const shorten = (txId) => `${txId.slice(0, 4)}...${txId.slice(-4)}`;
 
@@ -16,7 +17,7 @@ const getExplorerTxLink = (txId) =>
   `[${shorten(txId)}](https://mempool.space/testnet/tx/${txId})`;
 
 const getExplorerAddressLink = (address) =>
-  `[${shorten(address)}](https://mempool.space/testnet/address/${address})`;
+  `[${address}](https://mempool.space/testnet/address/${address})`;
 
 const bitcoinClient = createBitcoinClient({ privateKey });
 
@@ -49,10 +50,12 @@ const faucetCommand = {
     const balanceSats = await bitcoinClient.getBalance();
     if (balanceSats < satsAmount) {
       const address = bitcoinClient.getAddress();
-      await interaction.reply(
-        "I don't have enough tBTC." +
+      await interaction.reply({
+        content:
+          "I don't have enough tBTC." +
           ` Please send me some to ${getExplorerAddressLink(address)}!`,
-      );
+        flags: MessageFlags.SuppressEmbeds,
+      });
       return false;
     }
 
