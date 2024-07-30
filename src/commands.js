@@ -17,7 +17,7 @@ const getExplorerTxLink = (txId) =>
   `[${shorten(txId)}](https://mempool.space/testnet/tx/${txId})`;
 
 const getExplorerAddressLink = (address) =>
-  `[${shorten(address)}](https://mempool.space/testnet/address/${address})`;
+  `[${address}](https://mempool.space/testnet/address/${address})`;
 
 const bitcoinClient = createBitcoinClient({ privateKey });
 
@@ -50,10 +50,12 @@ const faucetCommand = {
     const balanceSats = await bitcoinClient.getBalance();
     if (balanceSats < satsAmount) {
       const address = bitcoinClient.getAddress();
-      await interaction.reply(
-        "I don't have enough tBTC." +
+      await interaction.reply({
+        content:
+          "I don't have enough tBTC." +
           ` Please send me some to ${getExplorerAddressLink(address)}!`,
-      );
+        flags: MessageFlags.SuppressEmbeds,
+      });
       return false;
     }
 
