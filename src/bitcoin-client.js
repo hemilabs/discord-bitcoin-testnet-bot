@@ -34,7 +34,7 @@ const sumValueOfUtxos = (utxos) =>
  * increase the cost of the initial transactions but will help reduce the
  * chances of creating dust outputs.
  */
-async function selectUtxos(utxos, value, feeLevel) {
+function selectUtxos(utxos, value, feeLevel) {
   utxos.sort((a, b) => a.value - b.value);
   const selected = [];
   let selectedValue;
@@ -60,7 +60,7 @@ async function createAndBroadcastTx(keyPair, address, value, changeAddress) {
     bitcoin.addresses.getAddressTxsUtxo(fromAddress),
     bitcoin.fees.getFeesRecommended(),
   ]);
-  const { selected, change } = await selectUtxos(utxos, value, fastestFee);
+  const { selected, change } = selectUtxos(utxos, value, fastestFee);
   const psbt = new bitcoinJs.Psbt({ network: bitcoinJs.networks.testnet });
   psbt.addInputs(
     await Promise.all(
