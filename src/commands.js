@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from "discord.js";
+import { MessageFlags, SlashCommandBuilder } from "discord.js";
 
 import { createBitcoinClient } from "./bitcoin-client.js";
 import {
@@ -22,7 +22,7 @@ const bitcoinClient = createBitcoinClient({ privateKey });
 
 // Command "/tbtc-faucet-balance"
 const faucetBalanceCommand = {
-  coolDown: 5,
+  coolDown: 5, // seconds
   data: new SlashCommandBuilder()
     .setName("tbtc-faucet-balance")
     .setDescription("Reports the testnet BTC balance of the faucet."),
@@ -67,11 +67,13 @@ const faucetCommand = {
 
     await interaction.reply("Sending...");
     const txId = await bitcoinClient.sendBitcoin(address, satsAmount);
-    await interaction.editReply(
-      `Sent ${satsToBtc(satsAmount)} tBTC` +
+    await interaction.editReply({
+      content:
+        `Sent ${satsToBtc(satsAmount)} tBTC` +
         ` to ${getExplorerAddressLink(address)}` +
         ` in transaction ${getExplorerTxLink(txId)}!`,
-    );
+      flags: MessageFlags.SuppressEmbeds,
+    });
     const logChannel = client.channels.cache.get(logChannelId);
     const { username } = interaction.user;
     await logChannel.send(
