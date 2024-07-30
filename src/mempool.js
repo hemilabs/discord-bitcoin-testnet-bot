@@ -1,16 +1,9 @@
+import fetch from "fetch-plus-plus";
+
 const mempoolSpaceApiBaseUrl = "https://mempool.space/testnet/api/";
 
-async function fetchMempoolApi(path, init) {
-  const res = await fetch(`${mempoolSpaceApiBaseUrl}${path}`, init);
-  const contentType = res.headers.get("Content-Type");
-  if (contentType?.startsWith("application/json")) {
-    return res.json();
-  } else if (contentType?.startsWith("text/plain")) {
-    return res.text();
-  }
-
-  throw new Error(`Unsupported content type: ${contentType}`);
-}
+const fetchMempoolApi = (path, init) =>
+  fetch(`${mempoolSpaceApiBaseUrl}${path}`, init);
 
 /**
  * Tiny library to talk to the mempool.space API.
