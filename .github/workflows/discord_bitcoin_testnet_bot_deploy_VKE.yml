@@ -21,16 +21,16 @@ jobs:
       - name: Install kubectl
         uses: azure/k8s-set-context@v4
         with:
-          kubeconfig: ${{ secrets.VKE_TEST_KUBECONFIG }}
+          kubeconfig: ${{ secrets.VKE_TESTNET_KUBECONFIG }}
 
       - name: Install Kustomize
         uses: imranismail/setup-kustomize@v2
 
       - name: Configure K8s Cluster Access for VKE
         env:
-          VKE_TEST_KUBECONFIG: ${{ secrets.VKE_TEST_KUBECONFIG }}
+          VKE_TESTNET_KUBECONFIG: ${{ secrets.VKE_TESTNET_KUBECONFIG }}
         run: |
-          echo $VKE_TEST_KUBECONFIG > ./kubeconfig.yaml
+          echo $VKE_TESTNET_KUBECONFIG > ./kubeconfig.yaml
           export KUBECONFIG=$PWD/kubeconfig.yaml
 
       - name: Create K8s Secrets
