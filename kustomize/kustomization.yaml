@@ -1,2 +1,2 @@
 resources:
-- discord-bitcoin-testnet-bot-deployment.yaml
+  - discord-bitcoin-testnet-bot-deployment.yaml
