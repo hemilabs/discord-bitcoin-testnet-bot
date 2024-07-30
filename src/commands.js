@@ -8,7 +8,8 @@ import {
   satsAmount,
 } from "./config.js";
 
-const satsToBtc = (sats) => (sats / 1e8).toFixed(8).replace(/0+$/, "");
+const satsToBtc = (sats) =>
+  (sats / 1e8).toFixed(8).replace(/0+$/, "").replace(/\.$/, "");
 
 const shorten = (txId) => `${txId.slice(0, 4)}...${txId.slice(-4)}`;
 
