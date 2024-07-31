@@ -35,10 +35,8 @@ jobs:
 
       - name: Create K8s Secrets
         run: |
-          if kubectl get secret discord-bitcoin-bot-secrets --namespace=${{ env.namespace }}; then
-            echo "Bot Secret already exists"
-          else
-            echo "Creating Bitcoin Bot Secret"
+            echo "Updating Bitcoin Bot Secret"
+            kubectl delete secret discord-bitcoin-bot-secrets --namespace=${{ env.namespace }}
             kubectl create secret generic discord-bitcoin-bot-secrets \
             --from-literal=BOT_TOKEN=${{ secrets.BOT_TOKEN }} \
             --from-literal=PRIVATE_KEY=${{ secrets.PRIVATE_KEY }} \
@@ -48,8 +46,6 @@ jobs:
             --from-literal=SATS_AMOUNT=${{ vars.SATS_AMOUNT }} \
             --from-literal=FAUCET_COOL_DOWN=${{ vars.FAUCET_COOL_DOWN }} \
             --namespace=${{ env.namespace }}
-          fi
-          echo "Checking Dockerhub Secret"
 
       - name: Dockerhub Secrets
         run: |
