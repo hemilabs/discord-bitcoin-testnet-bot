@@ -43,9 +43,10 @@ jobs:
             --from-literal=BOT_TOKEN=${{ secrets.BOT_TOKEN }} \
             --from-literal=PRIVATE_KEY=${{ secrets.PRIVATE_KEY }} \
             --from-literal=CLIENT_ID=${{ secrets.CLIENT_ID }} \
-            --from-literal=GUILD_ID=${{ secrets.CLIENT_SECRET }} \
+            --from-literal=GUILD_ID=${{ secrets.GUILD_ID }} \
             --from-literal=LOG_CHANNEL_ID=${{ secrets.LOG_CHANNEL_ID }} \
-            --from-literal=SATS_AMOUNT=${{ secrets.SATS_AMOUNT }} \
+            --from-literal=SATS_AMOUNT=${{ vars.SATS_AMOUNT }} \
+            --from-literal=FAUCET_COOL_DOWN=${{ vars.FAUCET_COOL_DOWN }} \
             --namespace=${{ env.namespace }}
           fi
           echo "Checking Dockerhub Secret"
