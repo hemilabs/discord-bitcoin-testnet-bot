@@ -45,6 +45,7 @@ jobs:
             --from-literal=CLIENT_ID=${{ secrets.CLIENT_ID }} \
             --from-literal=GUILD_ID=${{ secrets.CLIENT_SECRET }} \
             --from-literal=LOG_CHANNEL_ID=${{ secrets.LOG_CHANNEL_ID }} \
+            --from-literal=SATS_AMOUNT=${{ secrets.SATS_AMOUNT }} \
             --namespace=${{ env.namespace }}
           fi
           echo "Checking Dockerhub Secret"
