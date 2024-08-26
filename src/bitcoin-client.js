@@ -5,6 +5,7 @@ import * as secp256k1 from "tiny-secp256k1";
 import { mempoolJS } from "./mempool.js";
 
 const BASE_TX_SIZE = 10;
+const FEE_FACTOR = 1.25;
 const P2PKH_INPUT_SIZE = 148;
 const P2PKH_OUTPUT_SIZE = 34;
 const DUST_SATS = 546;
@@ -60,7 +61,8 @@ async function createAndBroadcastTx(keyPair, address, value, changeAddress) {
     bitcoin.addresses.getAddressTxsUtxo(fromAddress),
     bitcoin.fees.getFeesRecommended(),
   ]);
-  const { selected, change } = selectUtxos(utxos, value, fastestFee);
+  const feeLevel = Math.ceil(fastestFee * FEE_FACTOR);
+  const { selected, change } = selectUtxos(utxos, value, feeLevel);
   const psbt = new bitcoinJs.Psbt({ network: bitcoinJs.networks.testnet });
   psbt.addInputs(
     await Promise.all(
