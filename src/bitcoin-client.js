@@ -1,6 +1,8 @@
 import { ECPairFactory as ecPairFactory, networks } from "ecpair";
 import * as bitcoinJs from "bitcoinjs-lib";
 import * as secp256k1 from "tiny-secp256k1";
+import pDoWhilst from "p-do-whilst";
+import shuffle from "lodash/shuffle.js";
 
 import { mempoolJS } from "./mempool.js";
 
@@ -29,25 +31,38 @@ const sumValueOfUtxos = (utxos) =>
   utxos.reduce((total, utxo) => total + utxo.value, 0);
 
 /**
- * Select UTXOs from the set to cover the value and fee.
+ * Selects UTXOs from the set to cover the value and fee.
  *
- * UTXOs are sorted ascending by value to pick the smaller ones first. This will
- * increase the cost of the initial transactions but will help reduce the
- * chances of creating dust outputs.
+ * UTXOs are selected sorting the list in ascending by value to pick the smaller
+ * ones first, or are just selected at random.
  */
-function selectUtxos(utxos, value, feeLevel) {
-  utxos.sort((a, b) => a.value - b.value);
+const utxoSelectionStrategies = {
+  random: "random",
+  smallerFirst: "smaller-first",
+};
+function selectUtxos(utxos, value, feeLevel, strategy) {
+  let sorted;
+  switch (strategy) {
+    case utxoSelectionStrategies.smallerFirst:
+      sorted = [].concat(utxos.sort((a, b) => a.value - b.value));
+      break;
+    case utxoSelectionStrategies.random:
+      sorted = shuffle(utxos);
+      break;
+    default:
+      throw new Error(`Invalid UTXO selection strategy: ${strategy}`);
+  }
   const selected = [];
   let selectedValue;
   let requiredValue = value + (BASE_TX_SIZE + 2 * P2PKH_OUTPUT_SIZE) * feeLevel;
   let change;
   let i = 0;
   do {
-    selected.push(utxos[i++]);
+    selected.push(sorted[i++]);
     selectedValue = sumValueOfUtxos(selected);
     requiredValue += P2PKH_INPUT_SIZE * feeLevel;
     change = selectedValue - requiredValue;
-  } while (selectedValue < requiredValue && i < utxos.length);
+  } while (selectedValue < requiredValue && i < sorted.length);
   if (selectedValue < requiredValue) {
     throw new Error("Not enough balance");
   }
@@ -55,14 +70,14 @@ function selectUtxos(utxos, value, feeLevel) {
   return { change, selected };
 }
 
-async function createAndBroadcastTx(keyPair, address, value, changeAddress) {
+async function tryCreateAndBroadcastTx(keyPair, address, value, strategy) {
   const fromAddress = getAddressFromPublicKey(keyPair.publicKey);
   const [utxos, { fastestFee }] = await Promise.all([
     bitcoin.addresses.getAddressTxsUtxo(fromAddress),
     bitcoin.fees.getFeesRecommended(),
   ]);
   const feeLevel = Math.ceil(fastestFee * FEE_FACTOR);
-  const { selected, change } = selectUtxos(utxos, value, feeLevel);
+  const { selected, change } = selectUtxos(utxos, value, feeLevel, strategy);
   const psbt = new bitcoinJs.Psbt({ network: bitcoinJs.networks.testnet });
   psbt.addInputs(
     await Promise.all(
@@ -78,12 +93,60 @@ async function createAndBroadcastTx(keyPair, address, value, changeAddress) {
   );
   psbt.addOutput({ address, value });
   if (change > DUST_SATS) {
-    psbt.addOutput({ address: changeAddress || fromAddress, value: change });
+    psbt.addOutput({ address: fromAddress, value: change });
   }
   psbt.signAllInputs(keyPair);
   psbt.finalizeAllInputs();
   const txhex = psbt.extractTransaction().toHex();
   const txId = await bitcoin.transactions.postTx({ txhex });
+  return txId;
+}
+
+/**
+ * Creates and broadcasts a tx to send bitcoin to the recipient address.
+ *
+ * The broadcast may fail if i.e. an UTXO has too many unconfirmed ancestors.
+ * For that reason and only in that case (the node returns the error code -26),
+ * the operation is retried with different selection strategies.
+ *
+ * Selecting the smaller value UTXOs first helps reducing the risk of creating
+ * dust but the cost may be higher until all the those small transactions are
+ * spent.
+ *
+ * Selecting UTXOs at random reduces the risk of selecting the same UTXOs in
+ * multiple concurrent operations, preventing the creation of long UTXO chains
+ * that would cause the node to reject the tx.
+ */
+async function createAndBroadcastTx(keyPair, address, value) {
+  const strategies = [
+    utxoSelectionStrategies.smallerFirst,
+    utxoSelectionStrategies.random,
+    utxoSelectionStrategies.random,
+    utxoSelectionStrategies.random,
+  ];
+  let txId;
+  await pDoWhilst(
+    async function () {
+      const strategy = strategies.shift();
+      if (!strategy) {
+        throw new Error("Could not obtain a valid UTXO set");
+      }
+
+      try {
+        txId = await tryCreateAndBroadcastTx(keyPair, address, value, strategy);
+      } catch (err) {
+        if (
+          err.code === -26 &&
+          err.message.startsWith("too-long-mempool-chain")
+        ) {
+          return null;
+        }
+
+        throw err;
+      }
+    },
+    () => !txId,
+  );
   return txId;
 }
 
