@@ -22,6 +22,12 @@ importers:
       fetch-plus-plus:
         specifier: 1.0.0
         version: 1.0.0
+      lodash:
+        specifier: 4.17.21
+        version: 4.17.21
+      p-do-whilst:
+        specifier: 2.0.0
+        version: 2.0.0
       tiny-secp256k1:
         specifier: 2.2.3
         version: 2.2.3
@@ -2090,6 +2096,13 @@ packages:
         integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==,
       }
     engines: { node: ">= 0.8.0" }
+
+  p-do-whilst@2.0.0:
+    resolution:
+      {
+        integrity: sha512-egyPJ7/c65DVu0S8UTN8EtmUsBb3L/3g5AcY3Af+ouFNkFMtwTVF2yQqZ4LjYPzz2mB5H1ytSlALR5jng/BSgg==,
+      }
+    engines: { node: ">=12" }
 
   p-limit@3.1.0:
     resolution:
@@ -4421,6 +4434,8 @@ snapshots:
       prelude-ls: 1.2.1
       type-check: 0.4.0
       word-wrap: 1.2.5
+
+  p-do-whilst@2.0.0: {}
 
   p-limit@3.1.0:
     dependencies:
