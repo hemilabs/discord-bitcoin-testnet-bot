@@ -109,9 +109,8 @@ async function tryCreateAndBroadcastTx(keyPair, address, value, strategy) {
  * For that reason and only in that case (the node returns the error code -26),
  * the operation is retried with different selection strategies.
  *
- * Selecting the smaller value UTXOs first helps reducing the risk of creating
- * dust but the cost may be higher until all the those small transactions are
- * spent.
+ * Selecting the smaller value UTXOs first helps reduce the risk of creating
+ * dust but the cost may be higher until all those small transactions are spent.
  *
  * Selecting UTXOs at random reduces the risk of selecting the same UTXOs in
  * multiple concurrent operations, preventing the creation of long UTXO chains
