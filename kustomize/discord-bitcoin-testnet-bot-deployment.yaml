@@ -45,5 +45,15 @@ spec:
                 secretKeyRef:
                   name: discord-bitcoin-bot-secrets
                   key: LOG_CHANNEL_ID
+            - name: SATS_AMOUNT
+              valueFrom:
+                secretKeyRef:
+                  name: discord-bitcoin-bot-secrets
+                  key: SATS_AMOUNT
+            - name: FAUCET_COOL_DOWN
+              valueFrom:
+                secretKeyRef:
+                  name: discord-bitcoin-bot-secrets
+                  key: FAUCET_COOL_DOWN
       imagePullSecrets:
         - name: dockerhub-secret
