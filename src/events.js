@@ -2,7 +2,9 @@ import { Collection, Events } from "discord.js";
 import { formatDistanceToNowStrict } from "date-fns";
 
 import { commandDefinitions } from "./commands.js";
-import { logChannelId } from "./config.js";
+import * as config from "./config.js";
+
+const toStars = (str) => str.replaceAll(/./g, "*");
 
 const commands = commandDefinitions.reduce(
   (collection, command) => collection.set(command.data.name, command),
@@ -14,8 +16,14 @@ const coolDowns = new Collection();
 const onReadyEvent = {
   async execute(client) {
     client.user.setStatus("online");
-    const logChannel = client.channels.cache.get(logChannelId);
+    const logChannel = client.channels.cache.get(config.logChannelId);
     await logChannel.send(`Bot started as ${client.user.tag} and ready!`);
+    const sanitizedConfig = {
+      ...config,
+      botToken: toStars(config.botToken),
+      privateKey: toStars(config.privateKey),
+    };
+    await logChannel.send(`Config: ${JSON.stringify(sanitizedConfig)}`);
   },
   name: Events.ClientReady,
   once: true,
@@ -59,7 +67,7 @@ const onInteractionCreateEvent = {
         );
       }
     } catch (err) {
-      const logChannel = client.channels.cache.get(logChannelId);
+      const logChannel = client.channels.cache.get(config.logChannelId);
       await logChannel.send(`Command execution failure: ${err.message}`);
       const content = `Something went wrong: ${err.message}`;
       if (interaction.replied) {
