@@ -44,7 +44,7 @@ function selectUtxos(utxos, value, feeLevel, strategy) {
   let sorted;
   switch (strategy) {
     case utxoSelectionStrategies.smallerFirst:
-      sorted = [].concat(utxos.sort((a, b) => a.value - b.value));
+      sorted = utxos.concat([]).sort((a, b) => a.value - b.value);
       break;
     case utxoSelectionStrategies.random:
       sorted = shuffle(utxos);
