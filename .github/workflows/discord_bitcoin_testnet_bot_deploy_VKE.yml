@@ -66,7 +66,7 @@ jobs:
             --docker-email=${{ secrets.DOCKER_EMAIL }} \
             --namespace=${{ env.namespace }}
           fi
-        
+
       - name: Update Image Tag in deployment
         if: success()
         run: |
