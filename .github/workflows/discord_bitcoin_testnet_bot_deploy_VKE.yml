@@ -47,6 +47,12 @@ jobs:
           --from-literal=FAUCET_COOL_DOWN=${{ vars.FAUCET_COOL_DOWN }} \
           --namespace=${{ env.namespace }}
 
+          echo "Restarting Bot"
+          kubectl -n discord rollout restart deployment discord-bitcoin-testnet-bot-deployment
+          
+          echo "Bot Status"
+          kubectl -n discord rollout status deployment/discord-bitcoin-testnet-bot-deployment
+
       - name: Dockerhub Secrets
         run: |
           if kubectl get secret dockerhub-secret --namespace=${{ env.namespace }}; then
@@ -60,8 +66,9 @@ jobs:
             --docker-email=${{ secrets.DOCKER_EMAIL }} \
             --namespace=${{ env.namespace }}
           fi
-
+        
       - name: Update Image Tag in deployment
+        if: success()
         run: |
           kustomize edit set image hemilabs/discord:latest=hemilabs/discord-bitcoin-testnet-bot:${{ github.event.inputs.tag }}
           kustomize edit set namespace ${{ env.namespace }}
