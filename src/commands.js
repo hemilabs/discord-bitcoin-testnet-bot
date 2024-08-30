@@ -31,6 +31,7 @@ const faucetBalanceCommand = {
     await interaction.reply("Querying...");
     const balance = satsToBtc(await bitcoinClient.getBalance());
     await interaction.editReply(`I have ${balance} tBTC.`);
+    return true;
   },
 };
 
