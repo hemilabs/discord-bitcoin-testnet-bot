@@ -49,7 +49,7 @@ jobs:
 
           echo "Restarting Bot"
           kubectl -n discord rollout restart deployment discord-bitcoin-testnet-bot-deployment
-          
+
           echo "Bot Status"
           kubectl -n discord rollout status deployment/discord-bitcoin-testnet-bot-deployment
 
@@ -70,7 +70,7 @@ jobs:
       - name: Update Image Tag in deployment
         if: success()
         run: |
-          kustomize edit set image hemilabs/discord:latest=hemilabs/discord-bitcoin-testnet-bot:${{ github.event.inputs.tag }}
+          kustomize edit set image hemilabs/discord-bitcoin-testnet-bot:latest=hemilabs/discord-bitcoin-testnet-bot:${{ github.event.inputs.tag }}
           kustomize edit set namespace ${{ env.namespace }}
         working-directory: ./kustomize
 
