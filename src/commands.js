@@ -4,6 +4,7 @@ import { createBitcoinClient } from "./bitcoin-client.js";
 import {
   faucetCoolDown,
   logChannelId,
+  maxUtxoCount,
   privateKey,
   satsAmount,
 } from "./config.js";
@@ -70,10 +71,11 @@ const faucetCommand = {
     }
 
     await interaction.reply("Sending...");
-    const outputs = [
-      { address: botAddress, value: satsAmount },
-      { address: userAddress, value: satsAmount },
-    ];
+    const utxoCount = await bitcoinClient.getUtxoCount();
+    const outputs = [{ address: userAddress, value: satsAmount }];
+    if (utxoCount < maxUtxoCount) {
+      outputs.push({ address: botAddress, value: satsAmount });
+    }
     const txId = await bitcoinClient.sendBitcoin(outputs);
     await interaction.editReply({
       content:

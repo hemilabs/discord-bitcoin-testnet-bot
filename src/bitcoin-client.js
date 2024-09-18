@@ -20,6 +20,11 @@ async function getBalanceOfAddress(address) {
   return details.chain_stats.funded_txo_sum - details.chain_stats.spent_txo_sum;
 }
 
+async function getUtxoCount(address) {
+  const utxo = await bitcoin.addresses.getAddressTxsUtxo(address);
+  return utxo.length;
+}
+
 function getAddressFromPublicKey(publicKey) {
   const payment = bitcoinJs.payments.p2pkh({
     network: bitcoinJs.networks.testnet,
@@ -173,6 +178,7 @@ export function createBitcoinClient({ privateKey }) {
   return {
     getAddress: () => clientAddress,
     getBalance: () => getBalanceOfAddress(clientAddress),
+    getUtxoCount: () => getUtxoCount(clientAddress),
     sendBitcoin: (outputs) => createAndBroadcastTx(ecPair, outputs),
     validateAddress: (address) => validateAddress(address),
   };
