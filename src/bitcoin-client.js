@@ -118,7 +118,7 @@ async function tryCreateAndBroadcastTx(keyPair, address, value, strategy) {
  */
 async function createAndBroadcastTx(keyPair, address, value) {
   const strategies = [
-    utxoSelectionStrategies.smallerFirst,
+    utxoSelectionStrategies.random,
     utxoSelectionStrategies.random,
     utxoSelectionStrategies.random,
     utxoSelectionStrategies.random,
