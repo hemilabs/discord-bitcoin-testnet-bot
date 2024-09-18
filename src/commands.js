@@ -4,6 +4,7 @@ import { createBitcoinClient } from "./bitcoin-client.js";
 import {
   faucetCoolDown,
   logChannelId,
+  maxUtxoCount,
   privateKey,
   satsAmount,
 } from "./config.js";
@@ -49,19 +50,19 @@ const faucetCommand = {
     ),
   async execute(client, interaction) {
     const balanceSats = await bitcoinClient.getBalance();
+    const botAddress = bitcoinClient.getAddress();
     if (balanceSats < satsAmount) {
-      const address = bitcoinClient.getAddress();
       await interaction.reply({
         content:
           "I don't have enough tBTC." +
-          ` Please send me some to ${getExplorerAddressLink(address)}!`,
+          ` Please send me some to ${getExplorerAddressLink(botAddress)}!`,
         flags: MessageFlags.SuppressEmbeds,
       });
       return false;
     }
 
-    const address = interaction.options.getString("address");
-    if (!bitcoinClient.validateAddress(address)) {
+    const userAddress = interaction.options.getString("address");
+    if (!bitcoinClient.validateAddress(userAddress)) {
       await interaction.reply({
         content: "Please provide a valid testnet bitcoin address.",
         ephemeral: true,
@@ -70,18 +71,23 @@ const faucetCommand = {
     }
 
     await interaction.reply("Sending...");
-    const txId = await bitcoinClient.sendBitcoin(address, satsAmount);
+    const utxoCount = await bitcoinClient.getUtxoCount();
+    const outputs = [{ address: userAddress, value: satsAmount }];
+    if (utxoCount < maxUtxoCount) {
+      outputs.push({ address: botAddress, value: satsAmount });
+    }
+    const txId = await bitcoinClient.sendBitcoin(outputs);
     await interaction.editReply({
       content:
         `Sent ${satsToBtc(satsAmount)} tBTC` +
-        ` to ${getExplorerAddressLink(address)}` +
+        ` to ${getExplorerAddressLink(userAddress)}` +
         ` in transaction ${getExplorerTxLink(txId)}!`,
       flags: MessageFlags.SuppressEmbeds,
     });
     const logChannel = client.channels.cache.get(logChannelId);
     const { username } = interaction.user;
     await logChannel.send(
-      `Sent ${satsToBtc(satsAmount)} tBTC to ${address} in ${txId}.` +
+      `Sent ${satsToBtc(satsAmount)} tBTC to ${userAddress} in ${txId}.` +
         ` Requested by ${username}.`,
     );
     return true;
