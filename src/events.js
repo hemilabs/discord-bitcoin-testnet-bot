@@ -4,7 +4,7 @@ import { formatDistanceToNowStrict } from "date-fns";
 import { commandDefinitions } from "./commands.js";
 import * as config from "./config.js";
 
-const toStars = (str) => str.replaceAll(/./g, "*");
+const toStars = (str) => str.replaceAll(/./g, "x");
 
 const commands = commandDefinitions.reduce(
   (collection, command) => collection.set(command.data.name, command),
