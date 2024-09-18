@@ -123,7 +123,8 @@ async function tryCreateAndBroadcastTx(keyPair, outputs, strategy) {
  */
 async function createAndBroadcastTx(keyPair, outputs) {
   const strategies = [
-    utxoSelectionStrategies.smallerFirst,
+    // Disabled to test if only-random works better.
+    // utxoSelectionStrategies.smallerFirst,
     utxoSelectionStrategies.random,
     utxoSelectionStrategies.random,
     utxoSelectionStrategies.random,
