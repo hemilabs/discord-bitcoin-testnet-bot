@@ -3,6 +3,7 @@ import * as bitcoinJs from "bitcoinjs-lib";
 import * as secp256k1 from "tiny-secp256k1";
 import pDoWhilst from "p-do-whilst";
 import shuffle from "lodash/shuffle.js";
+import sumBy from "lodash/sumBy.js";
 
 import { mempoolJS } from "./mempool.js";
 
@@ -40,7 +41,7 @@ const utxoSelectionStrategies = {
   random: "random",
   smallerFirst: "smaller-first",
 };
-function selectUtxos(utxos, value, feeLevel, strategy) {
+function selectUtxos(utxos, outputs, feeLevel, strategy) {
   let sorted;
   switch (strategy) {
     case utxoSelectionStrategies.smallerFirst:
@@ -54,7 +55,9 @@ function selectUtxos(utxos, value, feeLevel, strategy) {
   }
   const selected = [];
   let selectedValue;
-  let requiredValue = value + (BASE_TX_SIZE + 2 * P2PKH_OUTPUT_SIZE) * feeLevel;
+  const value = sumBy(outputs, "value");
+  const size = BASE_TX_SIZE + (outputs.length + 1) * P2PKH_OUTPUT_SIZE;
+  let requiredValue = value + size * feeLevel;
   let change;
   let i = 0;
   do {
@@ -70,14 +73,14 @@ function selectUtxos(utxos, value, feeLevel, strategy) {
   return { change, selected };
 }
 
-async function tryCreateAndBroadcastTx(keyPair, address, value, strategy) {
+async function tryCreateAndBroadcastTx(keyPair, outputs, strategy) {
   const fromAddress = getAddressFromPublicKey(keyPair.publicKey);
   const [utxos, { fastestFee }] = await Promise.all([
     bitcoin.addresses.getAddressTxsUtxo(fromAddress),
     bitcoin.fees.getFeesRecommended(),
   ]);
   const feeLevel = Math.ceil(fastestFee * FEE_FACTOR);
-  const { selected, change } = selectUtxos(utxos, value, feeLevel, strategy);
+  const { selected, change } = selectUtxos(utxos, outputs, feeLevel, strategy);
   const psbt = new bitcoinJs.Psbt({ network: bitcoinJs.networks.testnet });
   psbt.addInputs(
     await Promise.all(
@@ -91,7 +94,9 @@ async function tryCreateAndBroadcastTx(keyPair, address, value, strategy) {
       }),
     ),
   );
-  psbt.addOutput({ address, value });
+  outputs.forEach(function ({ address, value }) {
+    psbt.addOutput({ address, value });
+  });
   if (change > DUST_SATS) {
     psbt.addOutput({ address: fromAddress, value: change });
   }
@@ -116,7 +121,7 @@ async function tryCreateAndBroadcastTx(keyPair, address, value, strategy) {
  * multiple concurrent operations, preventing the creation of long UTXO chains
  * that would cause the node to reject the tx.
  */
-async function createAndBroadcastTx(keyPair, address, value) {
+async function createAndBroadcastTx(keyPair, outputs) {
   const strategies = [
     utxoSelectionStrategies.smallerFirst,
     utxoSelectionStrategies.random,
@@ -132,7 +137,7 @@ async function createAndBroadcastTx(keyPair, address, value) {
       }
 
       try {
-        txId = await tryCreateAndBroadcastTx(keyPair, address, value, strategy);
+        txId = await tryCreateAndBroadcastTx(keyPair, outputs, strategy);
       } catch (err) {
         if (
           err.code === -26 &&
@@ -167,8 +172,7 @@ export function createBitcoinClient({ privateKey }) {
   return {
     getAddress: () => clientAddress,
     getBalance: () => getBalanceOfAddress(clientAddress),
-    sendBitcoin: (address, value) =>
-      createAndBroadcastTx(ecPair, address, value),
+    sendBitcoin: (outputs) => createAndBroadcastTx(ecPair, outputs),
     validateAddress: (address) => validateAddress(address),
   };
 }
