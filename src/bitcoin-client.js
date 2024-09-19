@@ -82,7 +82,7 @@ async function tryCreateAndBroadcastTx(keyPair, outputs, strategy) {
   const fromAddress = getAddressFromPublicKey(keyPair.publicKey);
   const [utxos, { fastestFee }] = await Promise.all([
     bitcoin.addresses.getAddressTxsUtxo(fromAddress),
-    bitcoin.fees.getFeesRecommended(),
+    bitcoin.fees.getFeesRecommended().catch(() => ({ fastestFee: 250 })),
   ]);
   const feeLevel = Math.ceil(fastestFee * FEE_FACTOR);
   const { selected, change } = selectUtxos(utxos, outputs, feeLevel, strategy);
