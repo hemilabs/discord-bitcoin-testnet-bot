@@ -18,7 +18,7 @@ export const esploraJs = function ({ baseUrl }) {
         getAddressTxsUtxo: (address) => fetchApi(`address/${address}/utxo`),
       },
       fees: {
-        getFeeEstimates: () => fetchApi("/fee-estimates"),
+        getFeeEstimates: () => fetchApi("fee-estimates"),
         getFeesRecommended: () => fetchApi("v1/fees/recommended"),
       },
       transactions: {
