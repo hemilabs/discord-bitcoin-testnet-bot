@@ -55,14 +55,5 @@ spec:
                 secretKeyRef:
                   name: discord-bitcoin-bot-secrets
                   key: FAUCET_COOL_DOWN
-          livenessProbe:
-            httpGet:
-              path: /healthz
-              port: 8080
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            failureThreshold: 3
-            successThreshold: 1
-            timeoutSeconds: 5
       imagePullSecrets:
         - name: dockerhub-secret
