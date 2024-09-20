@@ -40,25 +40,25 @@ const onInteractionCreateEvent = {
       return;
     }
 
-    if (!coolDowns.has(command.data.name)) {
-      coolDowns.set(command.data.name, new Collection());
-    }
-    const timestamps = coolDowns.get(command.data.name);
-    if (
-      timestamps.has(interaction.user.id) &&
-      timestamps.get(interaction.user.id) > Date.now()
-    ) {
-      const waitTime = formatDistanceToNowStrict(
-        new Date(timestamps.get(interaction.user.id)),
-      );
-      await interaction.reply({
-        content: `Please wait ${waitTime} before executing this command again.`,
-        ephemeral: true,
-      });
-      return;
-    }
-
     try {
+      if (!coolDowns.has(command.data.name)) {
+        coolDowns.set(command.data.name, new Collection());
+      }
+      const timestamps = coolDowns.get(command.data.name);
+      if (
+        timestamps.has(interaction.user.id) &&
+        timestamps.get(interaction.user.id) > Date.now()
+      ) {
+        const waitTime = formatDistanceToNowStrict(
+          new Date(timestamps.get(interaction.user.id)),
+        );
+        await interaction.reply({
+          content: `Please wait ${waitTime} before executing this command again.`,
+          ephemeral: true,
+        });
+        return;
+      }
+
       const success = await command.execute(client, interaction);
       if (success) {
         timestamps.set(
@@ -84,4 +84,16 @@ const onInteractionCreateEvent = {
   name: Events.InteractionCreate,
 };
 
-export const eventDefinitions = [onReadyEvent, onInteractionCreateEvent];
+const onErrorEvent = {
+  async execute(client, error) {
+    const logChannel = client.channels.cache.get(config.logChannelId);
+    await logChannel.send(`General failure: ${error.message || error}`);
+  },
+  name: Events.Error,
+};
+
+export const eventDefinitions = [
+  onErrorEvent,
+  onInteractionCreateEvent,
+  onReadyEvent,
+];
