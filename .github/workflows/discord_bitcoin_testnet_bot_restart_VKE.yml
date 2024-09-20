@@ -1,0 +1,51 @@
+name: Update Secrets Discord Bitcoin Bot
+on:
+  workflow_dispatch:
+  
+  repository_dispatch:
+    types: [bot-private-key-update]
+
+jobs:
+  UpdateSecretsAndDeploy:
+    env:
+      namespace: discord
+
+    name: Update Bot Secrets and Restart Bot
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install kubectl
+        uses: azure/k8s-set-context@v4
+        with:
+          kubeconfig: ${{ secrets.VKE_TESTNET_KUBECONFIG }}
+
+      - name: Configure K8s Cluster Access for VKE
+        env:
+          VKE_TESTNET_KUBECONFIG: ${{ secrets.VKE_TESTNET_KUBECONFIG }}
+        run: |
+          echo $VKE_TESTNET_KUBECONFIG > ./kubeconfig.yaml
+          export KUBECONFIG=$PWD/kubeconfig.yaml
+
+      - name: Update K8s Secrets
+        run: |
+          echo "Updating Bitcoin Bot Secret"
+          kubectl delete secret discord-bitcoin-bot-secrets --namespace=${{ env.namespace }}
+          kubectl create secret generic discord-bitcoin-bot-secrets \
+          --from-literal=BOT_TOKEN=${{ secrets.BOT_TOKEN }} \
+          --from-literal=PRIVATE_KEY=${{ secrets.PRIVATE_KEY }} \
+          --from-literal=CLIENT_ID=${{ secrets.CLIENT_ID }} \
+          --from-literal=GUILD_ID=${{ secrets.GUILD_ID }} \
+          --from-literal=LOG_CHANNEL_ID=${{ secrets.LOG_CHANNEL_ID }} \
+          --from-literal=SATS_AMOUNT=${{ vars.SATS_AMOUNT }} \
+          --from-literal=FAUCET_COOL_DOWN=${{ vars.FAUCET_COOL_DOWN }} \
+          --namespace=${{ env.namespace }}
+
+      - name: Restart Bot Deployment
+        run: |
+          echo "Restarting Bot"
+          kubectl -n discord rollout restart deployment discord-bitcoin-testnet-bot-deployment
+
+      - name: Check Bot Deployment Status
+        run: |
+          echo "Checking Bot Status"
+          kubectl -n discord rollout status deployment/discord-bitcoin-testnet-bot-deployment
