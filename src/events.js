@@ -69,11 +69,15 @@ const onInteractionCreateEvent = {
     } catch (err) {
       const logChannel = client.channels.cache.get(config.logChannelId);
       await logChannel.send(`Command execution failure: ${err.message}`);
-      const content = `Something went wrong: ${err.message}`;
-      if (interaction.replied) {
-        await interaction.editReply(content);
-      } else {
-        await interaction.reply(content);
+      try {
+        const content = `Something went wrong: ${err.message}`;
+        if (interaction.replied) {
+          await interaction.editReply(content);
+        } else {
+          await interaction.reply(content);
+        }
+      } catch (innerError) {
+        await logChannel.send(`Command reply failure: ${innerError.message}`);
       }
     }
   },

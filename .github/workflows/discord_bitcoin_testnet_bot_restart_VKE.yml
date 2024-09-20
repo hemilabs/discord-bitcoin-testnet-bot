@@ -1,7 +1,7 @@
 name: Update Secrets Discord Bitcoin Bot
 on:
   workflow_dispatch:
-  
+
   repository_dispatch:
     types: [bot-private-key-update]
 
