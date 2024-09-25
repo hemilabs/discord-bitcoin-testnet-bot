@@ -1,7 +1,6 @@
 import { ECPairFactory as ecPairFactory, networks } from "ecpair";
 import * as bitcoinJs from "bitcoinjs-lib";
 import * as secp256k1 from "tiny-secp256k1";
-import get from "lodash/fp/get.js";
 import pDoWhilst from "p-do-whilst";
 import shuffle from "lodash/shuffle.js";
 import sumBy from "lodash/sumBy.js";
@@ -9,19 +8,13 @@ import sumBy from "lodash/sumBy.js";
 import { esploraJs } from "./esplora.js";
 
 const BASE_TX_SIZE = 10;
-const FALLBACK_FASTEST_FEE = 250;
+const FALLBACK_FEE_RATE = 250;
 const FEE_FACTOR = 1.25;
 const P2PKH_INPUT_SIZE = 148;
 const P2PKH_OUTPUT_SIZE = 34;
 const DUST_SATS = 546;
 
-const USE_BLOCKSTREAM = true;
-
-const { bitcoin } = esploraJs({
-  baseUrl: USE_BLOCKSTREAM
-    ? "https://blockstream.info/testnet/api/"
-    : "https://mempool.space/testnet/api/",
-});
+const { bitcoin } = esploraJs({ network: "testnet" });
 
 async function getBalanceOfAddress(address) {
   const details = await bitcoin.addresses.getAddress({ address });
@@ -41,10 +34,20 @@ function getAddressFromPublicKey(publicKey) {
   return /** @type string */ (payment.address);
 }
 
+/**
+ * Gets the fastest fee rate, regardless of the API used.
+ *
+ * The Blockstream API responds the fastest fee at "1" block, but Mempool.space
+ * does that only for the mainnet. For the testnet, it returns fee rates for
+ * "144", "504" and "1008" blocks.
+ *
+ * In the case all calls fail for any reason, a fallback fee rate will be used.
+ */
 const getFastestFee = () =>
-  USE_BLOCKSTREAM
-    ? bitcoin.fees.getFeeEstimates().then(get("1"))
-    : bitcoin.fees.getFeesRecommended().then(get("fastestFee"));
+  bitcoin.fees
+    .getFeeEstimates()
+    .then((fees) => Math.ceil(fees["1"] || fees["144"] || FALLBACK_FEE_RATE))
+    .catch(() => FALLBACK_FEE_RATE);
 
 const sumValueOfUtxos = (utxos) =>
   utxos.reduce((total, utxo) => total + utxo.value, 0);
@@ -95,7 +98,7 @@ async function tryCreateAndBroadcastTx(keyPair, outputs, strategy) {
   const fromAddress = getAddressFromPublicKey(keyPair.publicKey);
   const [utxos, fastestFee] = await Promise.all([
     bitcoin.addresses.getAddressTxsUtxo(fromAddress),
-    getFastestFee().catch(() => FALLBACK_FASTEST_FEE),
+    getFastestFee(),
   ]);
   const feeLevel = Math.ceil(fastestFee * FEE_FACTOR);
   const { selected, change } = selectUtxos(utxos, outputs, feeLevel, strategy);
