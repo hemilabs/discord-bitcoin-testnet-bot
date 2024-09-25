@@ -22,7 +22,7 @@ async function getBalanceOfAddress(address) {
 }
 
 async function getUtxoCount(address) {
-  const utxo = await bitcoin.addresses.getAddressTxsUtxo(address);
+  const utxo = await bitcoin.addresses.getAddressTxsUtxo({ address });
   return utxo.length;
 }
 
@@ -97,7 +97,7 @@ function selectUtxos(utxos, outputs, feeLevel, strategy) {
 async function tryCreateAndBroadcastTx(keyPair, outputs, strategy) {
   const fromAddress = getAddressFromPublicKey(keyPair.publicKey);
   const [utxos, fastestFee] = await Promise.all([
-    bitcoin.addresses.getAddressTxsUtxo(fromAddress),
+    bitcoin.addresses.getAddressTxsUtxo({ address: fromAddress }),
     getFastestFee(),
   ]);
   const feeLevel = Math.ceil(fastestFee * FEE_FACTOR);

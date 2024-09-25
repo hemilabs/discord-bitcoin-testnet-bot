@@ -39,13 +39,18 @@ export const esploraJs = function ({ network }) {
     bitcoin: {
       addresses: {
         getAddress: ({ address }) => fetchApi(`address/${address}`),
-        getAddressTxsUtxo: (address) => fetchApi(`address/${address}/utxo`),
+        getAddressTxs: ({ address }) => fetchApi(`address/${address}/txs`),
+        getAddressTxsUtxo: ({ address }) => fetchApi(`address/${address}/utxo`),
+      },
+      blocks: {
+        getBlocksTipHeight: () => fetchApi("blocks/tip/height"),
       },
       fees: {
         getFeeEstimates: () => fetchApi("fee-estimates"),
         getFeesRecommended: () => fetchApi("v1/fees/recommended"),
       },
       transactions: {
+        getTx: ({ txid }) => fetchApi(`tx/${txid}`),
         getTxHex: ({ txid }) => fetchApi(`tx/${txid}/hex`),
         postTx: ({ txhex }) => fetchApi("tx", { body: txhex, method: "POST" }),
       },
