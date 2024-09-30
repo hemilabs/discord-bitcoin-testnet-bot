@@ -1,11 +1,10 @@
 import { ECPairFactory as ecPairFactory, networks } from "ecpair";
+import { esploraClient } from "esplora-client";
 import * as bitcoinJs from "bitcoinjs-lib";
 import * as secp256k1 from "tiny-secp256k1";
 import pDoWhilst from "p-do-whilst";
 import shuffle from "lodash/shuffle.js";
 import sumBy from "lodash/sumBy.js";
-
-import { esploraJs } from "./esplora.js";
 
 const BASE_TX_SIZE = 10;
 const FALLBACK_FEE_RATE = 250;
@@ -14,7 +13,7 @@ const P2PKH_INPUT_SIZE = 148;
 const P2PKH_OUTPUT_SIZE = 34;
 const DUST_SATS = 546;
 
-const { bitcoin } = esploraJs({ network: "testnet" });
+const { bitcoin } = esploraClient({ network: "testnet" });
 
 async function getBalanceOfAddress(address) {
   const details = await bitcoin.addresses.getAddress({ address });
@@ -165,7 +164,7 @@ async function createAndBroadcastTx(keyPair, outputs) {
           err.code === -26 &&
           err.message.startsWith("too-long-mempool-chain")
         ) {
-          return null;
+          return;
         }
 
         throw err;
