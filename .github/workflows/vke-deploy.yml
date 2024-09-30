@@ -4,11 +4,17 @@ on:
       tag:
         description: Docker Tag
         required: true
+  workflow_run:
+    workflows:
+      - docker-build-push
+    types:
+      - completed
 
 jobs:
   deploy:
     name: Deploy to VKE
 
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     env:
       namespace: discord
@@ -69,9 +75,11 @@ jobs:
       - if: success()
         name: Update Image Tag in deployment
         run: |
-          kustomize edit set image hemilabs/discord-bitcoin-testnet-bot:latest=hemilabs/discord-bitcoin-testnet-bot:${{ github.event.inputs.tag }}
+          kustomize edit set image hemilabs/discord-bitcoin-testnet-bot:latest=hemilabs/discord-bitcoin-testnet-bot:${{ env.TAG }}
           kustomize edit set namespace ${{ env.namespace }}
         working-directory: ./kustomize
+        env:
+          TAG: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.event.workflow_run.head_branch }}
 
       - name: Deploy to VKE
         run: kubectl apply -k ./kustomize

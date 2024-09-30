@@ -37,3 +37,15 @@ Use the following commands to build and run the bot:
 docker build -t hemilabs/discord-bitcoin-testnet-bot:latest .
 docker run -d --rm hemilabs/discord-bitcoin-testnet-bot:latest
 ```
+
+## Publishing new versions
+
+Once the desired changes are merged into the `master` branch, tag the branch and push the tag:
+
+```sh
+git tag -s -m "" "v$(jq -r '.version' <package.json)"
+git push --tags
+```
+
+Then the Docker image will be automatically built and pushed to Docker Hub.
+The deployment will also be automatically triggered after that.
