@@ -1,3 +1,5 @@
+name: JS Checks
+
 on:
   pull_request:
   push:
