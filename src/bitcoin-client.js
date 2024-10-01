@@ -1,19 +1,19 @@
 import { ECPairFactory as ecPairFactory, networks } from "ecpair";
+import { esploraClient } from "esplora-client";
 import * as bitcoinJs from "bitcoinjs-lib";
 import * as secp256k1 from "tiny-secp256k1";
 import pDoWhilst from "p-do-whilst";
 import shuffle from "lodash/shuffle.js";
 import sumBy from "lodash/sumBy.js";
 
-import { mempoolJS } from "./mempool.js";
-
 const BASE_TX_SIZE = 10;
+const FALLBACK_FEE_RATE = 250;
 const FEE_FACTOR = 1.25;
 const P2PKH_INPUT_SIZE = 148;
 const P2PKH_OUTPUT_SIZE = 34;
 const DUST_SATS = 546;
 
-const { bitcoin } = mempoolJS();
+const { bitcoin } = esploraClient({ network: "testnet" });
 
 async function getBalanceOfAddress(address) {
   const details = await bitcoin.addresses.getAddress({ address });
@@ -21,7 +21,7 @@ async function getBalanceOfAddress(address) {
 }
 
 async function getUtxoCount(address) {
-  const utxo = await bitcoin.addresses.getAddressTxsUtxo(address);
+  const utxo = await bitcoin.addresses.getAddressTxsUtxo({ address });
   return utxo.length;
 }
 
@@ -32,6 +32,21 @@ function getAddressFromPublicKey(publicKey) {
   });
   return /** @type string */ (payment.address);
 }
+
+/**
+ * Gets the fastest fee rate, regardless of the API used.
+ *
+ * The Blockstream API responds the fastest fee at "1" block, but Mempool.space
+ * does that only for the mainnet. For the testnet, it returns fee rates for
+ * "144", "504" and "1008" blocks.
+ *
+ * In the case all calls fail for any reason, a fallback fee rate will be used.
+ */
+const getFastestFee = () =>
+  bitcoin.fees
+    .getFeeEstimates()
+    .then((fees) => Math.ceil(fees["1"] || fees["144"] || FALLBACK_FEE_RATE))
+    .catch(() => FALLBACK_FEE_RATE);
 
 const sumValueOfUtxos = (utxos) =>
   utxos.reduce((total, utxo) => total + utxo.value, 0);
@@ -80,9 +95,9 @@ function selectUtxos(utxos, outputs, feeLevel, strategy) {
 
 async function tryCreateAndBroadcastTx(keyPair, outputs, strategy) {
   const fromAddress = getAddressFromPublicKey(keyPair.publicKey);
-  const [utxos, { fastestFee }] = await Promise.all([
-    bitcoin.addresses.getAddressTxsUtxo(fromAddress),
-    bitcoin.fees.getFeesRecommended().catch(() => ({ fastestFee: 250 })),
+  const [utxos, fastestFee] = await Promise.all([
+    bitcoin.addresses.getAddressTxsUtxo({ address: fromAddress }),
+    getFastestFee(),
   ]);
   const feeLevel = Math.ceil(fastestFee * FEE_FACTOR);
   const { selected, change } = selectUtxos(utxos, outputs, feeLevel, strategy);
@@ -149,7 +164,7 @@ async function createAndBroadcastTx(keyPair, outputs) {
           err.code === -26 &&
           err.message.startsWith("too-long-mempool-chain")
         ) {
-          return null;
+          return;
         }
 
         throw err;
