@@ -1,18 +1,23 @@
-name: Discord Bitcoin Testnet Bot Build/Push & VKE Deployment
 on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Docker Tag"
+        description: Docker Tag
         required: true
+  workflow_run:
+    workflows:
+      - docker-build-push
+    types:
+      - completed
 
 jobs:
-  Deploy:
+  deploy:
+    name: Deploy to VKE
+
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
     env:
       namespace: discord
-
-    name: Deploy to VKE
-    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -27,11 +32,11 @@ jobs:
         uses: imranismail/setup-kustomize@v2
 
       - name: Configure K8s Cluster Access for VKE
-        env:
-          VKE_TESTNET_KUBECONFIG: ${{ secrets.VKE_TESTNET_KUBECONFIG }}
         run: |
           echo $VKE_TESTNET_KUBECONFIG > ./kubeconfig.yaml
           export KUBECONFIG=$PWD/kubeconfig.yaml
+        env:
+          VKE_TESTNET_KUBECONFIG: ${{ secrets.VKE_TESTNET_KUBECONFIG }}
 
       - name: Create K8s Secrets
         run: |
@@ -67,12 +72,14 @@ jobs:
             --namespace=${{ env.namespace }}
           fi
 
-      - name: Update Image Tag in deployment
-        if: success()
+      - if: success()
+        name: Update Image Tag in deployment
         run: |
-          kustomize edit set image hemilabs/discord-bitcoin-testnet-bot:latest=hemilabs/discord-bitcoin-testnet-bot:${{ github.event.inputs.tag }}
+          kustomize edit set image hemilabs/discord-bitcoin-testnet-bot:latest=hemilabs/discord-bitcoin-testnet-bot:${{ env.TAG }}
           kustomize edit set namespace ${{ env.namespace }}
         working-directory: ./kustomize
+        env:
+          TAG: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.event.workflow_run.head_branch }}
 
       - name: Deploy to VKE
         run: kubectl apply -k ./kustomize

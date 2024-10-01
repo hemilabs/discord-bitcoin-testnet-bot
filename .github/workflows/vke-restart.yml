@@ -1,17 +1,15 @@
-name: Update Secrets Discord Bitcoin Bot
 on:
+  repository_dispatch:
+    types:
+      - bot-private-key-update
   workflow_dispatch:
 
-  repository_dispatch:
-    types: [bot-private-key-update]
-
 jobs:
-  UpdateSecretsAndDeploy:
-    env:
-      namespace: discord
-
+  update-secrets-and-deploy:
     name: Update Bot Secrets and Restart Bot
     runs-on: ubuntu-latest
+    env:
+      namespace: discord
 
     steps:
       - name: Install kubectl
@@ -20,11 +18,11 @@ jobs:
           kubeconfig: ${{ secrets.VKE_TESTNET_KUBECONFIG }}
 
       - name: Configure K8s Cluster Access for VKE
-        env:
-          VKE_TESTNET_KUBECONFIG: ${{ secrets.VKE_TESTNET_KUBECONFIG }}
         run: |
           echo $VKE_TESTNET_KUBECONFIG > ./kubeconfig.yaml
           export KUBECONFIG=$PWD/kubeconfig.yaml
+        env:
+          VKE_TESTNET_KUBECONFIG: ${{ secrets.VKE_TESTNET_KUBECONFIG }}
 
       - name: Update K8s Secrets
         run: |
