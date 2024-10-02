@@ -1,3 +1,5 @@
+name: VKE Deploy
+
 on:
   workflow_dispatch:
     inputs:
@@ -6,7 +8,7 @@ on:
         required: true
   workflow_run:
     workflows:
-      - docker-build-push
+      - Docker Build and Push
     types:
       - completed
 

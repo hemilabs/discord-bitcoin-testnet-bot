@@ -1,3 +1,5 @@
+name: VKE Restart
+
 on:
   repository_dispatch:
     types:
