@@ -2,14 +2,11 @@
   "name": "discord-bitcoin-faucet-bot",
   "version": "1.0.9",
   "license": "MIT",
-  "author": {
-    "name": "Gabriel Montes",
-    "email": "gabriel@bloq.com"
-  },
+  "author": "Gabriel Montes <gabriel@bloq.com>",
   "scripts": {
     "deploy-commands": "node src/deploy-commands.js",
-    "start": "node src/bot.js",
-    "prepare": "husky"
+    "prepare": "husky",
+    "start": "node src/bot.js"
   },
   "dependencies": {
     "bitcoinjs-lib": "6.1.6",
