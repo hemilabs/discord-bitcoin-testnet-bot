@@ -59,13 +59,8 @@ const onInteractionCreateEvent = {
         return;
       }
 
-      const success = await command.execute(client, interaction);
-      if (success) {
-        timestamps.set(
-          interaction.user.id,
-          Date.now() + command.coolDown * 1000,
-        );
-      }
+      timestamps.set(interaction.user.id, Date.now() + command.coolDown * 1000);
+      await command.execute(client, interaction);
     } catch (err) {
       const logChannel = client.channels.cache.get(config.logChannelId);
       await logChannel.send(`Command execution failure: ${err.message}`);
