@@ -1,0 +1,6 @@
+{
+  "extends": ["bloq", "bloq/node"],
+  "rules": {
+    "quotes": "off"
+  }
+}
