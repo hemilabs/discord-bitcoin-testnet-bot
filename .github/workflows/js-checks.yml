@@ -10,14 +10,6 @@ concurrency:
 
 jobs:
   run-checks:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-      - run: corepack enable
-      - run: pnpm install
-      - run: npx eslint .
-      - run: npx prettier --check .
-      - run: npx knip
+    uses: bloq/actions/.github/workflows/js-checks.yml@v1
+    with:
+      cache: pnpm

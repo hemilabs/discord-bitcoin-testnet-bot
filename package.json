@@ -6,6 +6,8 @@
   "scripts": {
     "deploy-commands": "node src/deploy-commands.js",
     "deps:check": "knip",
+    "format:check": "prettier --check .",
+    "lint": "eslint --cache --quiet .",
     "prepare": "husky",
     "start": "node src/bot.js"
   },
