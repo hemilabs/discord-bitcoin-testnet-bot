@@ -1,0 +1,5 @@
+{
+  "entry": ["src/bot.js", "src/deploy-commands.js"],
+  "ignore": ["test/**"],
+  "ignoreDependencies": ["lint-staged"]
+}

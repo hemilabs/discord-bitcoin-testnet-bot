@@ -5,6 +5,9 @@
   "author": "Gabriel Montes <gabriel@bloq.com>",
   "scripts": {
     "deploy-commands": "node src/deploy-commands.js",
+    "deps:check": "knip",
+    "format:check": "prettier --check .",
+    "lint": "eslint --cache --quiet .",
     "prepare": "husky",
     "start": "node src/bot.js"
   },
@@ -19,7 +22,10 @@
     "tiny-secp256k1": "2.2.3"
   },
   "devDependencies": {
+    "@commitlint/cli": "19.5.0",
     "@types/node": "20.14.10",
+    "better-sort-package-json": "1.1.0",
+    "commitlint-config-bloq": "1.1.0",
     "eslint": "8.57.0",
     "eslint-config-bloq": "4.1.0",
     "husky": "9.1.4",
@@ -32,33 +38,5 @@
     "node": ">=10"
   },
   "packageManager": "pnpm@9.5.0+sha512.140036830124618d624a2187b50d04289d5a087f326c9edfc0ccd733d76c4f52c3a313d4fc148794a2a9d81553016004e6742e8cf850670268a7387fc220c903",
-  "type": "module",
-  "eslintConfig": {
-    "extends": [
-      "bloq",
-      "bloq/node"
-    ],
-    "rules": {
-      "quotes": "off"
-    }
-  },
-  "knip": {
-    "entry": [
-      "src/bot.js",
-      "src/deploy-commands.js"
-    ],
-    "ignore": [
-      "test/**"
-    ]
-  },
-  "lint-staged": {
-    "!(*.js)": [
-      "prettier --ignore-unknown --write"
-    ],
-    "*.js": [
-      "eslint --cache --fix --quiet",
-      "prettier --ignore-unknown --write"
-    ]
-  },
-  "prettier": {}
+  "type": "module"
 }
