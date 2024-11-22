@@ -49,18 +49,6 @@ const faucetCommand = {
         .setRequired(true),
     ),
   async execute(client, interaction) {
-    const balanceSats = await bitcoinClient.getBalance();
-    const botAddress = bitcoinClient.getAddress();
-    if (balanceSats < satsAmount) {
-      await interaction.reply({
-        content:
-          "I don't have enough tBTC." +
-          ` Please send me some to ${getExplorerAddressLink(botAddress)}!`,
-        flags: MessageFlags.SuppressEmbeds,
-      });
-      return false;
-    }
-
     const userAddress = interaction.options.getString("address");
     if (!bitcoinClient.validateAddress(userAddress)) {
       await interaction.reply({
@@ -70,7 +58,21 @@ const faucetCommand = {
       return false;
     }
 
-    await interaction.reply("Sending...");
+    await interaction.deferReply(); // Acknowledge the event
+
+    const balanceSats = await bitcoinClient.getBalance();
+    const botAddress = bitcoinClient.getAddress();
+    if (balanceSats < satsAmount) {
+      await interaction.editReply({
+        content:
+          "I don't have enough tBTC." +
+          ` Please send me some to ${getExplorerAddressLink(botAddress)}!`,
+        flags: MessageFlags.SuppressEmbeds,
+      });
+      return false;
+    }
+
+    await interaction.editReply("Sending...");
     const utxoCount = await bitcoinClient.getUtxoCount();
     const outputs = [{ address: userAddress, value: satsAmount }];
     if (utxoCount < maxUtxoCount) {
@@ -84,6 +86,7 @@ const faucetCommand = {
         ` in transaction ${getExplorerTxLink(txId)}!`,
       flags: MessageFlags.SuppressEmbeds,
     });
+
     const logChannel = client.channels.cache.get(logChannelId);
     const { username } = interaction.user;
     await logChannel.send(
